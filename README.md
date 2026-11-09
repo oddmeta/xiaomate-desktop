@@ -1,482 +1,454 @@
-# 🐾 小美同学 - 桌面宠物
+# XiaoMate：一个真正干活的的开源桌宠“小美同学”
 
-基于 Electron + Live2D + PIXI.js 的智能桌面宠物应用，支持 Live2D 模型展示、AI 对话、任务管理、技能调用等丰富功能。
+[TOC]
 
-![Electron](https://img.shields.io/badge/Electron-31.0-blue)
-![Live2D](https://img.shields.io/badge/Live2D-Cubism4-green)
-![PIXI.js](https://img.shields.io/badge/PIXI.js-5.x-orange)
-![Version](https://img.shields.io/badge/Version-1.0.5-lightgrey)
+**你的桌面智能助理,构建你自己的数字分身,并让知识管理、任务提醒、自动化办公触手可及**
 
-## ✨ 核心功能
+## 快速开始
 
-### 🎭 Live2D 模型展示
-- 支持 Cubism 4 模型的加载与渲染
-- 模型点击互动（TapBody 动画）
-- 待机动画自动轮播（9种待机动作）
-- 可调节模型大小（大/中/小三档）
-- 支持自定义模型目录
-- 模型自动朝向翻转（走动时）
-
-### 🖱️ 窗口交互
-- **拖拽移动**：拖动桌宠窗口移动位置
-- **边缘吸附**：拖动至屏幕边缘自动隐藏为小标签
-- **悬停预览**：鼠标悬停隐藏标签展开预览
-- **点击菜单**：单击桌宠打开圆盘菜单
-- **双击聊天**：双击桌宠打开对话窗口
-- **系统托盘**：支持托盘快捷操作
-- **单实例锁定**：防止同时运行多个桌宠实例
-
-### 💬 AI 智能对话
-- WebSocket 实时通信
-- 流式输出响应
-- Markdown 格式支持
-- 聊天记录保存与加载
-- 底部字幕实时显示
-- 支持后端地址动态切换与自动重连
-
-### 🎯 圆盘菜单
-单击桌宠展开的环形菜单，包含以下功能：
-- **📑 书签收藏**：管理收藏的网页链接
-- **⏰ 提醒待办**：添加和管理提醒事项（支持公历/农历、重复周期）
-- **📋 定时任务**：创建一次性或循环定时任务
-- **⚡ 技能说明**：查看和调用 MCP 工具技能
-- **⚙️ 设置**：打开设置面板
-- **🔑 登录**：登录认证（根据登录状态动态显示/隐藏）
-- **🚪 退出**：退出桌面宠物
-- **音效反馈**：菜单打开、关闭、悬停、点击均有音效提示
-
-### 🎵 音效系统
-- 基于 Web Audio API 生成，无需外部音频文件
-- 菜单打开/关闭音效
-- 菜单项悬停/点击音效
-- 可调节音量和启用/禁用
-
-### 📋 任务管理
-#### 提醒待办
-- 多类别管理（工作、生活、学习等）
-- 支持公历/农历日期
-- 重复周期设置（一次性/每天/每周/每月/每年）
-- 提醒内容可自定义
-- 编辑和删除提醒
-- 下次提醒时间可手动调整
-
-#### 定时任务
-- 一次性任务和循环任务
-- 多种频率选项（每天/每周/每月/每年）
-- 自定义星期、日期、时间
-- 时区支持（UTC、中国标准时间、日本时间、纽约时间）
-- 重试机制（最大重试次数、重试间隔、超时设置）
-- 通知集成（可选通知方式）
-- 任务启用/禁用切换
-- 编辑任务配置
-
-### 🔧 MCP 技能系统
-- 从后端获取可用技能列表
-- 可视化技能展示（图标+描述）
-- 支持多种参数格式（args 列表/JSON Schema）
-- 工具调用对话框
-- 实时显示调用结果
-- 支持参数验证和类型检查
-
-### ⚙️ 设置系统
-#### 网络设置
-- 后端服务地址配置（默认 `https://x.oddmeta.net`）
-- WebSocket 自动重连
-
-#### 外观设置
-- 桌宠大小调节（大/中/小）
-- 窗口边框显示
-- 待机动画间隔和概率
-
-#### 行为设置
-- 自动走来走去功能
-- 走动参数配置（空闲时间、最大距离、速度）
-- 边缘行为配置（无/隐藏/吸附）
-- 调试模式开关
-
-#### 模型管理
-- 本地模型扫描和切换
-- 远程模型下载
-- 自定义模型目录设置
-
-#### 音效设置
-- 音效启用/禁用
-- 音量调节
-
-### 🚶 自动走动
-- 桌宠自动在屏幕范围内随机移动
-- 支持模型朝向自动翻转
-- 可配置的移动距离和速度
-- 闲时自动触发
-
-### 🔔 通知系统
-- Toast 弹窗通知
-- 通知队列管理
-- 点击标记已读
-- 独立通知窗口
-- 桌面级通知（系统通知）
-- 通知历史记录
-
-### 🔐 用户认证
-- Electron Session Cookie 管理
-- 登录窗口自动检测
-- WebSocket 认证连接
-- 登录状态自动同步（每30秒刷新）
-- 登出功能
-
-## 📁 项目结构
-
-```
-desktop_pet/
-├── main.js                 # Electron 主进程（HTTP 服务器、窗口管理、IPC 通信）
-├── preload.js              # 预加载脚本（IPC 桥接）
-├── pet.js                  # 渲染进程主入口（模块初始化、事件绑定）
-├── index.html              # 主页面（UI 结构、圆盘菜单、面板等）
-├── toast.html              # 通知窗口页面
-├── toast-preload.js        # 通知窗口预加载脚本
-├── package.json            # 项目配置和打包设置
-├── .env                    # 环境变量（调试模式等）
-├── start.bat               # Windows 快速启动脚本
-├── start.vbs               # Windows 无窗口启动脚本
-├── lib/                    # 前端模块
-│   ├── pet-common.js       # 公共工具模块（API 请求、模板管理）
-│   ├── pet-core.js         # 核心模块（PIXI、模型加载、拖拽）
-│   ├── pet-radial-menu.js  # 圆盘菜单
-│   ├── pet-chat.js         # 聊天对话
-│   ├── pet-panels.js       # 面板系统（收藏、提醒、任务）
-│   ├── pet-settings.js     # 设置管理
-│   ├── pet-wander.js       # 走动功能
-│   ├── pet-mcp.js          # MCP 技能
-│   ├── pet-notifications.js # 通知系统
-│   ├── pet-sounds.js       # 音效系统
-│   ├── pixi.min.js         # PIXI.js 渲染引擎
-│   ├── pixi5.min.js        # PIXI.js 5.x 版本
-│   ├── live2dcubismcore.min.js  # Live2D Core
-│   ├── cubism4.min.js      # Cubism 4 支持
-│   ├── pixi-live2d-display.min.js  # Live2D 显示库
-│   ├── marked.min.js       # Markdown 解析器
-│   └── qwebchannel.js      # Qt WebChannel 支持
-├── models/                 # 内置模型
-│   ├── Hiyori/             # Hiyori 模型
-│   └── Mao/                # Mao 模型
-├── resources/              # 资源文件（图标等）
-├── electron/               # Electron 运行时（开发环境）
-├── tests/                  # 测试文件
-├── docs/                   # 文档
-├── obfuscated/             # 混淆后的代码（发布用）
-└── release/                # 打包输出目录
-```
-
-## 🚀 快速开始
-
-### 环境要求
-- Node.js 16+
-- npm
-- Windows 10/11（推荐）/ macOS / Linux
-
-### 安装依赖
+### 通过 npm 安装(推荐)
 
 ```bash
+# 全局安装
+npm install -g xiaomate
+
+# 运行方式一: 直接运行
+npx xiaomate
+
+# 运行方式二: 使用命令
+xiaomate
+```
+
+**更新到最新版本:**
+```bash
+npm update -g xiaomate
+```
+
+**卸载:**
+```bash
+npm uninstall -g xiaomate
+```
+
+### 从源码运行
+
+```bash
+# 克隆仓库
+git clone https://github.com/oddmeta/xiaomate-desktop.git
+cd xiaomate-desktop
+
+# 安装依赖
 npm install
-```
 
-### 启动应用
-
-**方式一：使用 npm**
-```bash
+# 启动
 npm start
 ```
 
-**方式二：使用批处理文件（Windows）**
-```bash
-start.bat
-```
+---
 
-**方式三：无控制台窗口启动（Windows）**
-```bash
-start.vbs
-```
+趁这个国庆节，重新整理了一下 XiaoMate 的功能和界面，然后我又重整了一个 XiaoMate 的README 介绍。原先的技术太过于技术化了，许多人不懂技术的人看了一头雾水，这次改从 XiaoMate 所支持的功能出发，重写了一下。
 
-### 开启调试模式
+- **愿景层** — 一个完全了解你的 AI，记得你经历过什么、思考过什么、面对过什么；困惑时像另一个你一样给建议，想分享经验时可以替你与他人对话
+- **记录层** — 工作进展、学习心得、生活琐事、情绪波动，统统写进札记
+- **AI 整理层** — 人物关系图谱、心情标签、情绪曲线
+- **数字分身层** — 随着积累，XiaoMATE 越来越了解你；未来可以问"我曾经是怎么处理这类问题的？""我面对这种情况通常会怎么做？"，得到属于"你自己"的答案
+- **情感层** — 既是安全的倾诉树洞，也是映照成长轨迹的镜子
 
-在 `.env` 文件中设置：
+后面有空的时候准备再写一个功能介绍的系列文章，将 XiaoMate 小美同学支持的每个功能都给一一介绍一下。等我有空了哈~~~
 
-```env
-DEBUG_MODE=1
-```
+[![XiaoMate 小美同学](https://oddmeta.net/docs/xiaomate/resources/XiaoMATE.png)](http://oddmeta.net/docs/xiaomate/README.html)
+---
 
-或在环境变量中设置 `DEBUG_MODE=1`，启动时会自动打开开发者工具。
+## 一、小美同学能为你做什么?
 
-## 🔧 配置说明
+### 📔 心情札记 - 构建你的数字分身
 
-### 配置文件路径
+> 这是 XiaoMATE **最核心、最重要**的功能。你记录的每一篇札记，都是在为未来的"数字版自己"积累记忆。
 
-```
-C:\Users\[用户名]\AppData\Roaming\[应用名称]\pet-config.json
-```
+**你的愿景:** 希望有一个完全了解自己的 AI，它记得你经历过什么、思考过什么、面对过什么。当你困惑时，它可以像另一个你一样给出建议；当你想分享自己的经验时，它可以替你与他人对话。
 
-例如：
-```
-C:\Users\Administrator\AppData\Roaming\CharlottyMate\pet-config.json
-```
+**小美的方案:**
+- **全方位记录** - 工作进展、学习心得、生活琐事、情绪波动，统统可以写进札记
+- **AI 自动整理** - 自动提取札记中的关键人物，建立你的**人物关系图谱**；分析心情标签，绘制情绪变化曲线
+- **多维度回顾** - 支持**列表、日历、心情统计**多种视图，随时翻阅过去的自己
+- **数字分身基础** - 随着记录积累，XiaoMATE 会越来越了解你。未来当你问"我曾经是怎么处理这类问题的？""我面对这种情况通常会怎么做？"时，它能基于你的真实经历给出属于"你自己"的答案
+- **树洞与镜像** - 既是一个安全的倾诉空间，也是一面映照你成长轨迹的镜子
+- 数据本地存储，隐私安全有保障
 
-### 配置项说明
+### 📚 书签收藏 - 再也不怕找不到好文章
 
-配置文件存储了以下设置：
-- `base_url`：后端服务地址（默认 `https://x.oddmeta.net`）
-- `customModelsDir`：用户自定义模型目录路径
-- `currentModelPath`：当前使用的模型路径
-- `pet_size`：桌宠大小（`large`/`medium`/`small`）
-- `show_border`：是否显示窗口边框
-- `idle_interval`：待机动画间隔（秒）
-- `idle_probability`：待机动画触发概率（%）
-- `wander_enabled`：是否启用自动走动
-- `wander_idle_timeout`：空闲多久后开始走动（秒）
-- `wander_max_distance`：走动最大距离（像素）
-- `wander_speed`：走动速度（毫秒）
-- `edge_behavior`：边缘行为（`none`/`hide`/`snap`）
-- `lastPetPosition`：上次桌宠位置
-- `debug_enabled`：是否启用调试模式
+**你的痛点:** 经常在微信、浏览器里看到感兴趣的文章,想着"待会儿再看",结果过几天想找时怎么都找不到了。
 
-### Live2D 模型查找顺序
+**小美的方案:**
+- 看到好文章,随手转发到微信文件传输助手
+- 隔几天一次性把链接批量添加到小美同学
+- 小美会帮你把这些文章**全部下载保存到本地**,包括文章里的图片
+- 保存格式是**大模型友好的 Markdown**,方便以后做知识库、AI 问答
+- 支持按分类管理,支持关键词搜索,想什么时候看就什么时候看
+- **卡片/列表双视图**自由切换,浏览方式随心选
+- 支持**删除**和**重新下载**单篇收藏,管理更灵活
 
-查找模型文件，优先级：
-1. `.model3.json`（Cubism 4 模型文件）
-2. `index.json`
-3. `model.json`
+### ⏰ 待办提醒 - 私人事务,不上云才安心
 
-### 模型目录
+**你的痛点:** 手头事情太多,各种待办工具一大堆,但私人信息不想记录到第三方软件、云服务器上。
 
-默认模型目录路径：
-```
-/media/live2d/models/
-```
+**小美的方案:**
+- 完全本地运行,**所有数据不上云**,隐私安全有保障
+- 支持**一次性提醒**、**每日/每周/每月/每年循环提醒**
+- 支持**公历/农历**两种日历,生日、节气、传统节日一个不落
+- 到期后会在**系统右下角持续提醒你**,直到你确认关闭
+- 除了桌面提醒,还支持自动推送到**企业微信、钉钉、飞书、邮件**
 
-模型文件夹结构示例：
-```
-models/
-└── Hiyori/
-    ├── Hiyori.model3.json    # 模型定义文件
-    ├── Hiyori.moc3           # 模型数据
-    ├── Hiyori.cdi3.json      # 画布信息
-    ├── Hiyori.physics3.json  # 物理引擎
-    ├── Hiyori.pose3.json     # 姿势设置
-    ├── Hiyori.userdata3.json # 用户数据
-    ├── Hiyori.2048/          # 纹理贴图
-    │   ├── texture_00.png
-    │   └── texture_01.png
-    └── motions/              # 动作文件
-        ├── Hiyori_m01.motion3.json
-        └── ...
-```
+### 🤖 自动任务 - 让小美替你打工
 
-## 🎮 使用说明
+**你的痛点:** 每天都要做的事情(天气预报、新闻、工作日报、周报、工时填报...), repetitive work 浪费时间。
+
+**小美的方案:**
+- 配置好任务,小美会自动定时执行,支持**一次性**或**循环执行**
+- 可以配置**每天/每周/每月/每年**的执行频率,精确到星期几、几月几日
+- 执行结果除了桌面提醒,同样支持推送到**企业微信、钉钉、飞书、邮件**
+- 常见场景:
+  - 每天自动获取天气预报
+  - 每天推送你感兴趣领域的新闻
+  - 自动填写工作日报/周报
+  - 自动填报公司要求的每日工时
+  - 任何你希望自动完成的 repetitive work
+
+### 💬 AI 对话 - 你的 24 小时在线助理
+
+- 双击桌宠即可打开聊天窗口
+- 支持流式回复,**边想边说,不用等**
+- 支持查看历史聊天记录
+- 通过 WebSocket 实时连接,响应迅速
+
+### 📸 截屏分析 - 让AI"看懂"你的屏幕
+
+**你的痛点:** 看到报错信息不知道怎么解决,想快速了解屏幕上的内容,或者想知道当前打开了哪些应用。
+
+**小美的方案:**
+- 一键截屏,让AI帮你分析屏幕内容
+- **常见用法:**
+  - ✅ "帮我看看屏幕上打开了什么应用"
+  - ✅ "识别屏幕上的所有文字内容"
+  - ✅ "分析一下这个报错信息是什么问题"
+  - ✅ "看看我现在的代码编辑器里写的是什么"
+  - ✅ "屏幕上有几个窗口?分别是什么?"
+- 适用于技术支持、文档整理、问题排查等场景
+
+[![](https://oddmeta.net/docs/xiaomate/resources/screenshot-analyze-step2-returned-with-screenshot-and-analysis-progress.png)](http://oddmeta.net/docs/xiaomate/README.html)
+
+[![](https://oddmeta.net/docs/xiaomate/resources/screenshot-analyze-step3-final-response-for-the-input.png)](http://oddmeta.net/docs/xiaomate/README.html)
+
+### 🖼️ 照片分析 - 让AI"读懂"你的照片
+
+**你的痛点:** 手机里有大量照片,想快速了解照片的拍摄时间、地点、内容等信息,但不想一张张翻看。
+
+**小美的方案:**
+- 把照片发给小美,AI会自动识别照片信息
+- **常见问题:**
+  - 📅 "看下这张照片是什么时候拍的?"
+  - 📍 "这张照片拍摄地点是哪里?"
+  - 🔍 "照片里有什么内容?"
+- 支持分析照片EXIF信息(拍摄时间、设备、GPS位置等)
+- 支持识别照片中的物体、场景、人物等内容
+
+[![](https://oddmeta.net/docs/xiaomate/resources/xiaomate.chat.toolcall.png)](http://oddmeta.net/docs/xiaomate/README.html)
+
+### 🎭 桌宠陪伴 - 可爱不只是花瓶
+
+- **Live2D 2D 模型** 和 **VRM/GLB/GLTF 3D 模型** 双支持
+- 拖动桌宠移动位置,移到屏幕边缘自动隐藏
+- 右键打开圆盘菜单,双击打开聊天窗口
+- 支持模型点击互动、待机动画、自动走动
+- 支持透明区域点击穿透,**不挡着你用其他软件**
+
+### 🎤 全局语音助手 - 唤醒即对话
+
+**你的痛点:** 每次想和AI对话都需要打开聊天窗口，打字输入不够自然。
+
+**小美的方案:**
+- 🗣️ **语音唤醒**: 说出唤醒词（如"小美同学"），桌宠立即响应
+- 🎙️ **语音对话**: 唤醒后直接说话，AI自动识别并回复
+- 🔊 **TTS语音**: AI回复支持语音播报，不用盯着屏幕看
+- 🌍 **全局待命**: 后台持续监听，不依赖聊天窗口
+- 🔐 **自动认证**: 自动获取登录状态，无需重复登录
+
+**使用场景:**
+- 双手忙碌时，语音询问问题
+- 开车、做饭时，语音交互
+- 视力不佳的长辈，语音更方便
+- 后台待命，随时呼唤
+
+[![](https://oddmeta.net/docs/xiaomate/resources/voice-wakeup-demo.png)](http://oddmeta.net/docs/xiaomate/README.html)
+
+---
+
+## 二、快速开始
+
+### 下载安装：推荐绿色免安装版体验，觉得对你有用再考虑安装
+
+**Windows 用户:**
+- 🟢 **绿色免安装版:** [下载 ZIP](https://github.com/oddmeta/xiaomate-desktop/releases/download/v2.2.21/xiaomate-v.2.2.21-portable-win64.zip)
+  - 下载后解压缩,双击 `start.bat` 即可使用
+- 📦 **安装包版:** [下载 EXE](https://github.com/oddmeta/xiaomate-desktop/releases/download/v2.2.21/xiaomate-v.2.2.21-setup-win64.zip)
+  - 安装后可选开机自动启动
+
+**Mac/Linux 用户:**
+请自行下载代码,编译安装使用(见下方"开发者指南")
+
+> 💡 **建议先试用绿色免安装版**,觉得好用再考虑用安装包安装
 
 ### 基本操作
 
 | 操作 | 功能 |
-|------|------|
-| 拖动桌宠 | 移动位置 |
-| 单击桌宠 | 打开圆盘菜单 |
-| 双击桌宠 | 打开/关闭聊天窗口 |
-| 点击模型身体 | 播放互动动画 |
-| 拖至屏幕边缘 | 自动隐藏为标签 |
-| 悬停隐藏标签 | 展开预览 |
-| 点击隐藏标签 | 恢复显示 |
-| ESC 键 | 关闭圆盘菜单/面板 |
+| --- | --- |
+| **拖动桌宠** | 移动窗口位置 |
+| **单击模型** | 播放互动动画 |
+| **右键桌宠** | 打开圆盘菜单 |
+| **双击桌宠** | 打开/关闭聊天窗口 |
+| **移至屏幕边缘** | 隐藏桌宠 |
+| **单击边缘标签** | 恢复桌宠 |
+| **右键系统托盘图标** | 打开显示、设置或退出菜单 |
 
-### 圆盘菜单操作
+---
 
-| 菜单项 | 功能 |
-|--------|------|
-| 📑 书签收藏 | 添加和管理收藏链接 |
-| ⏰ 提醒待办 | 创建和管理提醒 |
-| 📋 定时任务 | 设置定时执行的任务 |
-| ⚡ 技能说明 | 查看和调用 MCP 技能 |
-| ⚙️ 设置 | 打开设置面板 |
-| 🔑 登录 | 登录认证（未登录时显示） |
-| 🚪 退出 | 退出应用 |
+## 三、功能详解
 
-### 聊天功能
+### 圆盘菜单
 
-1. **双击桌宠** 打开聊天窗口
-2. 在输入框输入文字，按回车或点击发送按钮发送
-3. 助手回复以流式输出显示，支持 Markdown 格式
-4. 回复内容同时显示在底部字幕条
-5. 点击关闭按钮或再次双击关闭聊天窗口
+右键桌宠后,你会看到以下功能入口:
 
-### 设置面板
+- 📌 **书签收藏** - 管理你收藏的文章
+- 📔 **心情札记** - 记录日常，查看心情统计和人物关系
+- ⏰ **提醒待办** - 查看和管理待办事项
+- 🤖 **自动任务** - 配置自动化任务
+- 🛠️ **技能说明** - 查看可用的 MCP 技能
+- ⚙️ **设置** - 调整外观、行为、模型等
+- 🔐 **登录** - 登录以使用在线功能
+- 🚪 **退出** - 关闭小美同学
 
-设置面板包含以下分类：
-- **网络设置**：配置后端服务地址
-- **外观设置**：调整桌宠大小、窗口边框、待机动画
-- **行为设置**：配置自动走动、边缘行为、调试模式
-- **模型管理**：扫描、切换、下载模型
-- **音效设置**：启用/禁用音效，调节音量
+[![](https://oddmeta.net/docs/xiaomate/resources/xiaomate.menu.png)](http://oddmeta.net/docs/xiaomate/README.html)
 
-## 🌐 后端服务
+> 未登录时,在线功能相关菜单会隐藏;登录后显示完整功能。
 
-本应用需要配合后端服务使用，后端提供以下 API：
+### 设置选项
 
-- **用户认证**：`/admin/login`
-- **聊天对话**：`/api/chat/history/`
-- **WebSocket 实时通信**：`/ws/`
-- **书签收藏**：`/api/markit/`
-- **提醒待办**：`/api/reminder/`
-- **定时任务**：`/api/schedule/`
-- **MCP 技能**：`/admin/api/mcp/list`
-- **模型管理**：`/admin/api/live2d/model/`
-- **通知系统**：`/api/notifications/`
+右键桌宠 → 选择"设置",你可以调整:
 
-后端地址可在设置中配置，默认为 `https://x.oddmeta.net`。
+- **网络** - 后端服务地址
+- **外观** - 桌宠大小、窗口边框、待机动画
+- **行为** - 点击穿透、自动走动参数
+- **模型** - 扫描、切换内置模型
+- **边缘** - 边缘隐藏行为
+- **系统** - 开机自启、调试模式
 
-## 🛠️ 开发说明
+保存设置后,会立即生效。
 
-### 技术栈
+---
 
-- **Electron 31**：跨平台桌面应用框架
-- **PIXI.js 5**：2D 渲染引擎
-- **Live2D Cubism 4**：2D 模型动画
-- **pixi-live2d-display**：PIXI.js 的 Live2D 插件
-- **marked.js**：Markdown 解析器
-- **Web Audio API**：音效生成
-- **内置 HTTP Server**：主进程静态文件服务
+## 四、开发者指南
 
-### 架构设计
+### 环境要求
 
-```
-┌─────────────────────────────────────────────┐
-│                  主进程 (main.js)             │
-│  - HTTP 服务器（静态文件服务）                 │
-│  - 窗口管理（透明无边框窗口）                  │
-│  - 边缘吸附动画                               │
-│  - IPC 通信处理                              │
-│  - Cookie 管理                               │
-│  - 模型下载与解压                            │
-│  - Toast 通知窗口                            │
-│  - 系统托盘                                  │
-│  - 单实例锁定                                │
-└──────────────────┬──────────────────────────┘
-                   │ IPC
-┌──────────────────┴──────────────────────────┐
-│              预加载脚本 (preload.js)           │
-│  - 安全桥接（contextIsolation）               │
-│  - window.petAPI 暴露                         │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────┴──────────────────────────┐
-│             渲染进程 (pet.js)                 │
-│  ┌────────────────────────────────────┐     │
-│  │  PetCore (核心)                     │     │
-│  │  - PIXI 初始化                     │     │
-│  │  - Live2D 模型加载                 │     │
-│  │  - 拖拽交互                        │     │
-│  └────────────────────────────────────┘     │
-│  ┌────────────────────────────────────┐     │
-│  │  功能模块                           │     │
-│  │  - PetRadialMenu (圆盘菜单)         │     │
-│  │  - PetChat (聊天对话)              │     │
-│  │  - PetPanels (面板系统)            │     │
-│  │  - PetSettings (设置管理)          │     │
-│  │  - PetWander (走动功能)            │     │
-│  │  - PetMCP (技能系统)               │     │
-│  │  - PetNotifications (通知)         │     │
-│  │  - PetSounds (音效系统)            │     │
-│  └────────────────────────────────────┘     │
-└─────────────────────────────────────────────┘
-```
+- **Node.js:** >= 18.0.0 (LTS 版本)
+- **npm:** >= 9.0.0
+- **操作系统:** Windows 10/11, macOS 10.15+, Linux
 
-### 模块说明
+### 从源码启动
 
-| 模块 | 文件 | 职责 |
-|------|------|------|
-| 核心模块 | `pet-core.js` | PIXI 初始化、Live2D 模型加载、动画控制、窗口拖拽 |
-| 圆盘菜单 | `pet-radial-menu.js` | 环形菜单的显示、隐藏、事件处理 |
-| 聊天对话 | `pet-chat.js` | WebSocket 通信、消息收发、流式输出、字幕显示 |
-| 面板系统 | `pet-panels.js` | 通用面板、收藏、提醒、任务管理 |
-| 设置管理 | `pet-settings.js` | 设置面板 UI、设置读写 |
-| 走动功能 | `pet-wander.js` | 自动走动、边缘隐藏/恢复 |
-| MCP 技能 | `pet-mcp.js` | 技能列表、工具调用 |
-| 通知系统 | `pet-notifications.js` | 通知接收、Toast 显示 |
-| 音效系统 | `pet-sounds.js` | Web Audio API 音效生成 |
-| 公共模块 | `pet-common.js` | 工具函数、API 请求、模板管理 |
-
-### 打包构建
-
-项目提供了完整的构建脚本：
-
-**一键构建（推荐）**
 ```bash
-build-release.bat
+# 克隆仓库
+git clone https://github.com/oddmeta/xiaomate-desktop.git
+cd xiaomate-desktop
+
+# 安装依赖
+npm install
+
+# 启动开发环境
+npm start
 ```
 
-该脚本会：
-1. 代码混淆处理
-2. 备份必要文件
-3. 使用 electron-builder 打包
-4. 输出到 `release/` 目录
+**Windows:** 也可直接运行 `start.bat`
 
-**快速构建（仅打包）**
+**macOS/Linux:**
 ```bash
-quick-build.bat
+chmod +x start.sh
+./start.sh
 ```
 
-**清理构建产物**
+### 语音功能开发提示
+
+如果你要开发或调试语音功能：
+
+1. **确保后端服务已启动**
+   ```bash
+   # Windows
+   cd ..\xiaoluo
+   python xiaoluo_app.py
+   
+   # macOS/Linux
+   cd ../xiaoluo
+   python xiaoluo_app.py
+   ```
+
+2. **查看主进程日志**
+   - 启动后会看到 `[语音助手]` 相关日志
+   - 检查是否成功获取 `session_id`
+
+3. **查看渲染进程日志**
+   - 打开 DevTools (F12)
+   - 查看 `[语音UI]` 和 `[聊天]` 日志
+
+4. **语音模块位置**
+   - 代码位于 `lib/pet-voice/`
+   - 文档位于 `docs/VOICE_ASSISTANT_REFACTOR.md`
+
+### 构建发布
+
+**Windows:**
 ```bash
-clean-build.bat
+npm run build
+# 或
+build.bat
 ```
+生成: `release/XiaoMate_vX.X.X_YYYY-MM-DD.exe` (NSIS 安装包)
 
-**npm 脚本**
+**macOS:**
 ```bash
-npm run build      # 等同于 build-release.bat
-npm run pack       # electron-builder 打包
-npm run obfuscate  # 代码混淆
-npm run clean      # 清理构建产物
+npm run build
+# 或
+./build.sh
+```
+生成: `release/XiaoMate_vX.X.X_YYYY-MM-DD.dmg` + `.zip`
+
+**Linux:**
+```bash
+npm run build
+# 或
+./build.sh
+```
+生成: `release/XiaoMate_vX.X.X_YYYY-MM-DD.AppImage` + `.deb` + `.rpm`
+
+> ⚠️ **Windows 构建前请关闭本项目及其他 Electron 应用**
+
+---
+
+## 五、项目信息
+
+- **当前版本:** v2.4.32
+- **应用 ID:** `com.oddmeta.xiaomate`
+- **代码仓库:** https://github.com/oddmeta/xiaomate-desktop
+- **发布页面:** https://github.com/oddmeta/xiaomate-desktop/releases
+- **后端项目:** https://github.com/catherine-wei/learning-ai
+- **帮助文档:** https://oddmeta.net/docs/xiaomate
+
+---
+
+## 六、技术架构(供开发者参考)
+
+小美同学基于 Electron 构建,支持 Windows/macOS/Linux 跨平台运行。核心特性:
+
+### 前端架构
+
+- **模型渲染:** PIXI.js + Live2D Cubism 4 (2D), Three.js + VRM 运行时 (3D)
+- **UI框架:** 原生 HTML/CSS/JavaScript，轻量化设计
+- **通信协议:** WebSocket 实时连接,支持流式 AI 回复
+- **本地存储:** 所有用户配置数据保存在本地用户目录
+  - Windows: `%APPDATA%\XiaoMate\pet-config.json`
+  - macOS: `~/Library/Application Support/XiaoMate/pet-config.json`
+  - Linux: `~/.config/XiaoMate/pet-config.json` 
+- **认证机制:** 基于 Electron Session Cookie 的登录认证
+- **动画支持:** VRM 内置动画、VRMA 文件、FBX 动画
+
+### 语音助手架构 (新增)
+
+```
+lib/pet-voice/                    ← 全局语音助手模块
+├── index.js                      ← 统一导出入口
+├── voice-assistant.js            ← 主进程核心（WebSocket、认证、状态管理）
+├── voice-integration.js          ← 初始化入口和IPC处理器
+├── audio-capture.js              ← 系统音频采集
+├── kws-bridge.js                 ← KWS唤醒检测桥接
+└── README.md                     ← 模块文档
 ```
 
-## 📝 开发日志
+**语音数据流:**
+```
+用户说话 → AudioCapture采集 → KWS Bridge发送(携带session_id) 
+→ 后端ASR识别 → 后端LLM处理 → 前端显示识别结果 → 前端流式显示AI回复 → TTS播放
+```
 
-详细的变更记录和技术文档请查看 `docs/` 目录：
+**核心特性:**
+- ✅ **认证自动传递**: 主进程从Electron session获取cookie，WebSocket连接自动携带
+- ✅ **全局待命**: 后台持续监听，不依赖渲染进程
+- ✅ **状态统一管理**: 主进程维护单一状态，通过IPC同步到渲染进程
+- ✅ **进程隔离**: 主进程管理网络/音频，渲染进程负责UI，崩溃不影响语音服务
 
-### 功能更新
-- [CHANGELOG_CHAT_UI_V2.md](docs/CHANGELOG_CHAT_UI_V2.md) - 聊天界面改版
-- [CHANGELOG_MARKDOWN_CHAT.md](docs/CHANGELOG_MARKDOWN_CHAT.md) - Markdown 聊天支持
-- [CHANGELOG_CLICK_MENU.md](docs/CHANGELOG_CLICK_MENU.md) - 单击菜单功能
-- [CHANGELOG_DBLCLICK_CHAT.md](docs/CHANGELOG_DBLCLICK_CHAT.md) - 双击聊天功能
-- [CHANGELOG_HOVER_MENU.md](docs/CHANGELOG_HOVER_MENU.md) - 悬停菜单设计
-- [CHANGELOG_RADIAL_MENU.md](docs/CHANGELOG_RADIAL_MENU.md) - 圆盘菜单功能
+### 模块结构
 
-### 设计文档
-- [CHAT_UI_REDESIGN.md](docs/CHAT_UI_REDESIGN.md) - 聊天界面重新设计
-- [HOVER_MENU_DESIGN.md](docs/HOVER_MENU_DESIGN.md) - 悬停菜单设计
-- [RADIAL_MENU_README.md](docs/RADIAL_MENU_README.md) - 圆盘菜单说明
-- [MENU_ACTION_MAPPING.md](docs/MENU_ACTION_MAPPING.md) - 菜单动作映射
+```
+frontend-desktop/
+├── main.js                       ← Electron主进程
+├── preload.js                    ← 预加载脚本（安全暴露IPC）
+├── voice-ui.js                   ← 渲染进程语音UI
+├── lib/
+│   ├── pet-voice/                ← 🆕 语音助手模块
+│   ├── pet-chat.js               ← 聊天功能
+│   ├── pet-model-*.js            ← 模型渲染
+│   ├── pet-notifications.js      ← 通知系统
+│   └── ...                       ← 其他功能模块
+├── docs/                         ← 技术文档
+│   ├── VOICE_ASSISTANT_REFACTOR.md
+│   ├── FIX_VOICE_TRANSCRIPT_DISPLAY.md
+│   └── MIGRATION_PET_VOICE.md
+└── resources/                    ← 静态资源
+```
 
-### 构建与修复
-- [BUILD_GUIDE.md](docs/BUILD_GUIDE.md) - 构建指南
-- [QUICK_BUILD.md](docs/QUICK_BUILD.md) - 快速构建
-- [DIRECTORY_STRUCTURE.md](docs/DIRECTORY_STRUCTURE.md) - 目录结构说明
-- [NSIS_CONFIG.md](docs/NSIS_CONFIG.md) - NSIS 安装程序配置
-- [ICON_FIX.md](docs/ICON_FIX.md) - 图标修复
-- [ENCODING_FIX.md](docs/ENCODING_FIX.md) - 编码修复
+详细技术文档请查看:
+- [跨平台运行指南](docs/CROSS_PLATFORM.md)
+- [快速启动指南](docs/QUICKSTART.md)
+- [FBX 动画集成说明](docs/FBX-动画集成说明.md)
+- [全局语音助手架构](docs/VOICE_ASSISTANT_REFACTOR.md) 🆕
+- [语音文本显示修复](docs/FIX_VOICE_TRANSCRIPT_DISPLAY.md) 🆕
+- [语音模块迁移说明](docs/MIGRATION_PET_VOICE.md) 🆕
 
-### 问题修复
-- [FIX_CHAT_LAYOUT.md](docs/FIX_CHAT_LAYOUT.md) - 聊天布局修复
-- [FIX_CHAT_UI_VISIBILITY.md](docs/FIX_CHAT_UI_VISIBILITY.md) - 聊天UI可见性修复
-- [FIX_DBLCLICK_RACE_CONDITION.md](docs/FIX_DBLCLICK_RACE_CONDITION.md) - 双击竞态条件修复
-- [FIX_RADIAL_CLICK_ISSUE.md](docs/FIX_RADIAL_CLICK_ISSUE.md) - 圆盘点击问题修复
-- [CONTEXT_MENU_DISABLED.md](docs/CONTEXT_MENU_DISABLED.md) - 右键菜单禁用说明
-- [backend_url_fix.md](docs/backend_url_fix.md) - 后端地址修复
-- [websocket_auth_fix.md](docs/websocket_auth_fix.md) - WebSocket 认证修复
+---
 
-## 📄 许可证
+## 七、常见问题
 
-本项目仅供学习和研究使用。
+**Q: 需要联网才能使用吗?**
 
-## 🤝 贡献
+A: 桌宠显示、模型渲染、本地设置等可以离线使用。AI 对话、书签下载、在线提醒等功能需要连接 XiaoMate 后端服务。
 
-欢迎提交 Issue 和 Pull Request！
+**Q: 数据安全吗?**
 
-## 📮 联系方式
+A: 待办提醒、自动任务等数据完全本地存储,不上云。在线功能的数据存储在后端服务器,建议自行搭建后端服务以保证隐私。
 
-如有问题或建议，请通过 Issue 反馈。
+**Q: 可以自己添加模型吗?**
+
+A: 可以!在设置 → 模型中扫描你的模型目录,支持 Live2D `.model3.json` 和 VRM/GLB/GLTF 格式。
+
+**Q: 支持哪些通知渠道?**
+
+A: 支持桌面通知、企业微信、钉钉、飞书、邮件推送。
+
+**Q: 如何使用语音唤醒功能?**
+
+A: 1. 确保已登录并连接到后端服务
+    2. 在设置中启用“语音唤醒”
+    3. 说出唤醒词（如“小美同学”）
+    4. 唤醒后直接说话即可
+
+**Q: 语音唤醒需要联网吗?**
+
+A: 是的，语音识别(ASR)和大模型(LLM)需要连接后端服务。音频采集和唤醒词检测(KWS)可以离线运行。
+
+**Q: 关闭聊天窗口后，语音服务还在运行吗?**
+
+A: 是的！语音服务在主进程运行，不依赖渲染进程。关闭聊天窗口后仍可语音唤醒。
+
+---
+
+**感谢使用 XiaoMATE 小美同学! 🎉**
+
+如有问题或建议,欢迎在 [GitHub Issues](https://github.com/oddmeta/xiaomate-desktop/issues) 反馈。
+也欢迎你关注我的个人公众号：奥德元。
