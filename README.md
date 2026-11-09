@@ -2,7 +2,14 @@
 
 [TOC]
 
-**你的桌面智能助理,构建你自己的数字分身,并让知识管理、任务提醒、自动化办公触手可及**
+**构建你自己的数字分身,你的桌面智能助理,并让知识管理、任务提醒、自动化办公触手可及**
+
+- 公众号：`奥德元`
+- 推特: `oddmet`
+- 微信: `oddmeta`
+- 我们的口号：`一起学习AI，一起追赶时代。Good good study, day day up.`
+
+![AI技术分享交流](https://oddmeta.net/static/images/wechat-learning-ai.png)
 
 ## 快速开始
 
