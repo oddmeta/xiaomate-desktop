@@ -19,6 +19,29 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo "")
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" "${VERSION}")
+          else
+            COMMITS=$(git log --pretty=format:"- %s" "${PREVIOUS_TAG}..${VERSION}")
+          fi
+          {
+            echo "commits<<EOF"
+            echo "## Commits"
+            echo ""
+            echo "$COMMITS"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Download artifacts from private repo
         uses: dawidd6/action-download-artifact@v3
         with:
@@ -34,10 +57,11 @@ jobs:
         with:
           tag_name: ${{ github.event.client_payload.version || github.event.inputs.version }}
           name: ${{ github.event.client_payload.version || github.event.inputs.version }}
+          body: ${{ steps.changelog.outputs.commits }}
+          generate_release_notes: true
           files: |
             artifacts/windows-artifacts/*
             artifacts/macos-artifacts/*
             artifacts/linux-artifacts/*
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
