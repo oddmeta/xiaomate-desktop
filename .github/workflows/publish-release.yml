@@ -1,0 +1,30 @@
+name: Publish Release
+
+on:
+  repository_dispatch:
+    types: [release-ready]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts from private repo
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          github_token: ${{ secrets.PRIVATE_REPO_TOKEN }}
+          repo: jackyhwei/xiaomate-desktop
+          workflow: release.yml
+          run_id: ${{ github.event.client_payload.run_id }}
+          path: artifacts
+          skip_unpack: false
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.client_payload.version }}
+          name: ${{ github.event.client_payload.version }}
+          files: |
+            artifacts/windows-artifacts/*
+            artifacts/macos-artifacts/*
+            artifacts/linux-artifacts/*
+          generate_release_notes: true
