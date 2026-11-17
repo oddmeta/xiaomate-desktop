@@ -52,6 +52,13 @@ jobs:
           path: artifacts
           skip_unpack: false
 
+      - name: Delete existing release if present
+        run: |
+          VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
+          gh release delete "$VERSION" --repo "${{ github.repository }}" --yes || true
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
