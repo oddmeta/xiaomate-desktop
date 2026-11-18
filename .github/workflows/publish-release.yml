@@ -34,11 +34,21 @@ jobs:
 
           # 方案1: 从私有仓库获取提交记录（优先，因为私有仓库有完整源码提交历史）
           echo "[changelog] Fetching commits from private repo for version: $VERSION"
-          GH_OUTPUT=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/tmp/gh_err || true)
+
+          # 先尝试获取上一个 release tag，用 compare API 只取版本间的 commits
+          PREVIOUS_TAG=$(gh api repos/jackyhwei/xiaomate-desktop/releases/latest --jq '.tag_name' 2>/dev/null || true)
+          if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$VERSION" ]; then
+            echo "[changelog] Previous release tag: $PREVIOUS_TAG. Using compare API for range commits."
+            GH_OUTPUT=$(gh api "repos/jackyhwei/xiaomate-desktop/compare/${PREVIOUS_TAG}...${VERSION}" --paginate 2>/tmp/gh_err || true)
+          else
+            echo "[changelog] No previous release found or same as current. Fetching last 30 commits."
+            GH_OUTPUT=$(gh api "repos/jackyhwei/xiaomate-desktop/commits?sha=${VERSION}&per_page=30" 2>/tmp/gh_err || true)
+          fi
+
           if [ -n "$GH_OUTPUT" ]; then
             echo "[changelog] GH API returned ${#GH_OUTPUT} chars"
             echo "[changelog] First 300 chars of response: $(echo "$GH_OUTPUT" | head -c 300)"
-            echo "aW1wb3J0IHN5cywganNvbgp0cnk6CiAgICBkYXRhID0ganNvbi5sb2FkKHN5cy5zdGRpbikKICAgIGZvciBpdGVtIGluIGRhdGE6CiAgICAgICAgbXNnID0gaXRlbVsnY29tbWl0J11bJ21lc3NhZ2UnXS5zcGxpdChjaHIoMTApKVswXQogICAgICAgIHByaW50KCctICcgKyBtc2cpCmV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgIHByaW50KCdQWVRIT05fRVJST1I6ICcgKyBzdHIoZSkpCiAgICBzeXMuZXhpdCgwKQo=" | base64 -d > /tmp/extract_commits.py
+            echo "aW1wb3J0IHN5cywganNvbgp0cnk6CiAgICBkYXRhID0ganNvbi5sb2FkKHN5cy5zdGRpbikKICAgIGNvbW1pdHMgPSBkYXRhCiAgICBpZiBpc2luc3RhbmNlKGRhdGEsIGRpY3QpIGFuZCAnY29tbWl0cycgaW4gZGF0YToKICAgICAgICBjb21taXRzID0gZGF0YVsnY29tbWl0cyddCiAgICBmb3IgaXRlbSBpbiBjb21taXRzOgogICAgICAgIG1zZyA9IGl0ZW1bJ2NvbW1pdCddWydtZXNzYWdlJ10uc3BsaXQoY2hyKDEwKSlbMF0KICAgICAgICBwcmludCgnLSAnICsgbXNnKQpleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBwcmludCgnUFlUSE9OX0VSUk9SOiAnICsgc3RyKGUpKQogICAgc3lzLmV4aXQoMCkK" | base64 -d > /tmp/extract_commits.py
             PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 /tmp/extract_commits.py 2>/tmp/py_err)
             if [ -n "$PRIVATE_COMMITS" ] && ! echo "$PRIVATE_COMMITS" | grep -q "^PYTHON_ERROR:"; then
               COMMITS="$PRIVATE_COMMITS"
