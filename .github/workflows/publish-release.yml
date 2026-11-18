@@ -26,14 +26,38 @@ jobs:
 
       - name: Generate changelog
         id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
         run: |
           VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo "")
-          if [ -z "$PREVIOUS_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"- %s" "${VERSION}")
-          else
-            COMMITS=$(git log --pretty=format:"- %s" "${PREVIOUS_TAG}..${VERSION}")
+          COMMITS=""
+
+          # 方案1: 尝试从私有仓库获取提交记录（优先，因为私有仓库有完整源码提交历史）
+          PRIVATE_COMMITS=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/dev/null | jq -r '''.[] | "- \(.commit.message | split("\n")[0])"''' 2>/dev/null || true)
+          if [ -n "$PRIVATE_COMMITS" ]; then
+            COMMITS="$PRIVATE_COMMITS"
+            echo "Changelog generated from private repo commits"
           fi
+
+          # 方案2: 如果私有仓库获取失败，尝试从本地公开仓库生成
+          if [ -z "$COMMITS" ]; then
+            if git rev-parse --verify "$VERSION" >/dev/null 2>&1; then
+              PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${VERSION}^" 2>/dev/null || echo "")
+              if [ -z "$PREVIOUS_TAG" ]; then
+                COMMITS=$(git log --pretty=format:"- %s" "${VERSION}" 2>/dev/null || echo "")
+              else
+                COMMITS=$(git log --pretty=format:"- %s" "${PREVIOUS_TAG}..${VERSION}" 2>/dev/null || echo "")
+              fi
+              echo "Changelog generated from local git history"
+            fi
+          fi
+
+          # 兜底: 如果都没有获取到，给一个占位提示
+          if [ -z "$COMMITS" ]; then
+            COMMITS="- Release $VERSION"
+            echo "No detailed changelog available for $VERSION"
+          fi
+
           {
             echo "commits<<EOF"
             echo "## Commits"
@@ -41,6 +65,7 @@ jobs:
             echo "$COMMITS"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+
 
       - name: Download artifacts from private repo
         uses: dawidd6/action-download-artifact@v3
