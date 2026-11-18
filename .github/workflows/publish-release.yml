@@ -58,6 +58,13 @@ jobs:
             echo "$COMMITS"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+          # 删除 changelog.txt，避免被 action-gh-release 当做 asset 上传
+          for dir in artifacts/windows-artifacts artifacts/macos-artifacts artifacts/linux-artifacts; do
+            if [ -f "$dir/changelog.txt" ]; then
+              rm "$dir/changelog.txt"
+              echo "Removed $dir/changelog.txt from upload list"
+            fi
+          done
 
       - name: Delete existing release if present
         run: |
