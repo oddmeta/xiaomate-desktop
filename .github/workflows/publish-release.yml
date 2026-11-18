@@ -40,11 +40,11 @@ jobs:
             echo "[changelog] First 300 chars of response: $(echo "$GH_OUTPUT" | head -c 300)"
             echo "aW1wb3J0IHN5cywganNvbgp0cnk6CiAgICBkYXRhID0ganNvbi5sb2FkKHN5cy5zdGRpbikKICAgIGZvciBpdGVtIGluIGRhdGE6CiAgICAgICAgbXNnID0gaXRlbVsnY29tbWl0J11bJ21lc3NhZ2UnXS5zcGxpdChjaHIoMTApKVswXQogICAgICAgIHByaW50KCctICcgKyBtc2cpCmV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgIHByaW50KCdQWVRIT05fRVJST1I6ICcgKyBzdHIoZSkpCiAgICBzeXMuZXhpdCgwKQo=" | base64 -d > /tmp/extract_commits.py
             PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 /tmp/extract_commits.py 2>/tmp/py_err)
-            if [ -n "$PRIVATE_COMMITS" ]; then
+            if [ -n "$PRIVATE_COMMITS" ] && ! echo "$PRIVATE_COMMITS" | grep -q "^PYTHON_ERROR:"; then
               COMMITS="$PRIVATE_COMMITS"
               echo "[changelog] Changelog generated from private repo commits"
             else
-              echo "[changelog] Python returned empty. stderr:"
+              echo "[changelog] Python processing failed or returned empty. stderr:"
               cat /tmp/py_err 2>/dev/null || true
             fi
           else
