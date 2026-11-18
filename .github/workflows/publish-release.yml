@@ -32,11 +32,20 @@ jobs:
           VERSION="${{ github.event.client_payload.version || github.event.inputs.version }}"
           COMMITS=""
 
-          # 方案1: 尝试从私有仓库获取提交记录（优先，因为私有仓库有完整源码提交历史）
-          PRIVATE_COMMITS=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/dev/null | jq -r '''.[] | "- \(.commit.message | split("\n")[0])"''' 2>/dev/null || true)
-          if [ -n "$PRIVATE_COMMITS" ]; then
-            COMMITS="$PRIVATE_COMMITS"
-            echo "Changelog generated from private repo commits"
+          # 方案1: 从私有仓库获取提交记录（优先，因为私有仓库有完整源码提交历史）
+          echo "[changelog] Fetching commits from private repo for version: $VERSION"
+          GH_OUTPUT=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/dev/null || true)
+          if [ -n "$GH_OUTPUT" ]; then
+            echo "[changelog] GH API returned data, processing with Python..."
+            PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 -c "import sys,json;data=json.load(sys.stdin);print(chr(10).join([chr(10).join(['- '+m.split(chr(10))[0] for m in [item['commit']['message']]]) for item in data]))" 2>/dev/null || true)
+            if [ -n "$PRIVATE_COMMITS" ]; then
+              COMMITS="$PRIVATE_COMMITS"
+              echo "[changelog] Changelog generated from private repo commits"
+            else
+              echo "[changelog] Python processing returned empty"
+            fi
+          else
+            echo "[changelog] GH API returned empty or failed"
           fi
 
           # 方案2: 如果私有仓库获取失败，尝试从本地公开仓库生成
@@ -48,14 +57,14 @@ jobs:
               else
                 COMMITS=$(git log --pretty=format:"- %s" "${PREVIOUS_TAG}..${VERSION}" 2>/dev/null || echo "")
               fi
-              echo "Changelog generated from local git history"
+              echo "[changelog] Changelog generated from local git history"
             fi
           fi
 
           # 兜底: 如果都没有获取到，给一个占位提示
           if [ -z "$COMMITS" ]; then
             COMMITS="- Release $VERSION"
-            echo "No detailed changelog available for $VERSION"
+            echo "[changelog] No detailed changelog available for $VERSION"
           fi
 
           {
