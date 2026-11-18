@@ -36,13 +36,29 @@ jobs:
           echo "[changelog] Fetching commits from private repo for version: $VERSION"
           GH_OUTPUT=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/dev/null || true)
           if [ -n "$GH_OUTPUT" ]; then
-            echo "[changelog] GH API returned data, processing with Python..."
-            PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 -c "import sys,json;data=json.load(sys.stdin);print(chr(10).join([chr(10).join(['- '+m.split(chr(10))[0] for m in [item['commit']['message']]]) for item in data]))" 2>/dev/null || true)
-            if [ -n "$PRIVATE_COMMITS" ]; then
+            echo "[changelog] GH API returned ${#GH_OUTPUT} chars, writing Python script..."
+            cat > /tmp/extract_commits.py << 'PYEOF'
+import sys, json
+try:
+    data = json.load(sys.stdin)
+    lines = []
+    for item in data:
+        msg = item['commit']['message'].split(chr(10))[0]
+        lines.append('- ' + msg)
+    print(chr(10).join(lines))
+except Exception as e:
+    print('PYTHON_ERROR: ' + str(e), file=sys.stderr)
+    sys.exit(1)
+PYEOF
+            PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 /tmp/extract_commits.py)
+            PY_EXIT=$?
+            if [ $PY_EXIT -ne 0 ]; then
+              echo "[changelog] Python script failed with exit code $PY_EXIT"
+            elif [ -n "$PRIVATE_COMMITS" ]; then
               COMMITS="$PRIVATE_COMMITS"
               echo "[changelog] Changelog generated from private repo commits"
             else
-              echo "[changelog] Python processing returned empty"
+              echo "[changelog] Python script returned empty (data might be empty array)"
             fi
           else
             echo "[changelog] GH API returned empty or failed"
