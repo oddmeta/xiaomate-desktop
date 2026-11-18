@@ -36,20 +36,8 @@ jobs:
           echo "[changelog] Fetching commits from private repo for version: $VERSION"
           GH_OUTPUT=$(gh api repos/jackyhwei/xiaomate-desktop/commits?sha="$VERSION" --paginate 2>/dev/null || true)
           if [ -n "$GH_OUTPUT" ]; then
-            echo "[changelog] GH API returned ${#GH_OUTPUT} chars, writing Python script..."
-            cat > /tmp/extract_commits.py << 'PYEOF'
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    lines = []
-    for item in data:
-        msg = item['commit']['message'].split(chr(10))[0]
-        lines.append('- ' + msg)
-    print(chr(10).join(lines))
-except Exception as e:
-    print('PYTHON_ERROR: ' + str(e), file=sys.stderr)
-    sys.exit(1)
-PYEOF
+            echo "[changelog] GH API returned ${#GH_OUTPUT} chars, decoding Python script..."
+            echo "aW1wb3J0IHN5cywganNvbgp0cnk6CiAgICBkYXRhID0ganNvbi5sb2FkKHN5cy5zdGRpbikKICAgIGZvciBpdGVtIGluIGRhdGE6CiAgICAgICAgbXNnID0gaXRlbVsnY29tbWl0J11bJ21lc3NhZ2UnXS5zcGxpdChjaHIoMTApKVswXQogICAgICAgIHByaW50KCctICcgKyBtc2cpCmV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgIHByaW50KCdQWVRIT05fRVJST1I6ICcgKyBzdHIoZSkpCiAgICBzeXMuZXhpdCgxKQo=" | base64 -d > /tmp/extract_commits.py
             PRIVATE_COMMITS=$(echo "$GH_OUTPUT" | python3 /tmp/extract_commits.py)
             PY_EXIT=$?
             if [ $PY_EXIT -ne 0 ]; then
